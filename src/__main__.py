@@ -1,3 +1,7 @@
+from src.enums import QuotationState, State
+
+from .state_machine import StateMachine
+
 from .model import Model
 from .parsing import GlobalInfo
 from pprint import pprint
@@ -10,12 +14,17 @@ if len(sys.argv) != 7:
 
 
 info = GlobalInfo()
-# give argument (program name not include)
+
+
 info.get_paths(sys.argv[1:])
 info.get_json()
-# pprint()
+
+prompts_list = [prompt["prompt"] for prompt in info.input_json]
 model = Model(
-    [prompt["prompt"] for prompt in info.input_json],
+    prompts_list,
     info.functions_definition_json,
 )
-print(model.model.decode(numpy.argmax(model.generate())))
+state = StateMachine(model, info.functions_definition_json, len(prompts_list))
+state.current_state = State.QUOTATION_MARK
+state.quotation_state = QuotationState.PROMPT_NAME_END
+state.update_state()

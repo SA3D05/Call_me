@@ -7,6 +7,7 @@ class State(Enum):
     START = auto()
     COLON = auto()
     COMMA = auto()
+    RESULT = auto()
     NUMBER = auto()
     STRING = auto()
     PROMPT = auto()
@@ -17,3 +18,28 @@ class State(Enum):
     LEFT_BRACKET = auto()
     RIGHT_BRACKET = auto()
     QUOTATION_MARK = auto()
+
+
+class BraceState:
+    PROMPT = auto()
+    PARAMETERS = auto()
+
+
+class QuotationState:
+    PROMPT_NAME_START = auto()
+    PROMPT_NAME_END = auto()
+
+    PROMPT_START = auto()
+    PROMPT_END = auto()
+
+    NAME_START = auto()
+    NAME_END = auto()
+
+    FN_START = auto()
+    FN_END = auto()
+
+    PARAM_START = auto()
+    PARAM_END = auto()
+
+    PARAM_ARG_START = auto()
+    PARAM_ARG_END = auto()
