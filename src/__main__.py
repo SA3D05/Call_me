@@ -24,7 +24,19 @@ model = Model(
     prompts_list,
     info.functions_definition_json,
 )
-state = StateMachine(model, info.functions_definition_json, len(prompts_list))
-state.current_state = State.QUOTATION_MARK
-state.quotation_state = QuotationState.PROMPT_NAME_END
-state.update_state()
+state = StateMachine(model.model, info.functions_definition_json, len(prompts_list))
+
+indent_level = 4
+
+state.get_correct_logits(model.generate())
+# def get_indent(value: int):
+#     return "\n" + (" " * indent_level * value)
+
+
+# if state.get_state() == State.START:
+#     print("[", get_indent(1), "{", get_indent(2), '"', sep="")
+
+# state.current_state = State.QUOTATION_MARK
+# state.quotation_state = QuotationState.PROMPT_NAME_END
+# state.update_state()
+# model.generate()

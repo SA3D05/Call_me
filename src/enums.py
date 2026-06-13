@@ -20,12 +20,12 @@ class State(Enum):
     QUOTATION_MARK = auto()
 
 
-class BraceState:
+class BraceState(Enum):
     PROMPT = auto()
     PARAMETERS = auto()
 
 
-class QuotationState:
+class QuotationState(Enum):
     PROMPT_NAME_START = auto()
     PROMPT_NAME_END = auto()
 
