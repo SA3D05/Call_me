@@ -31,10 +31,11 @@ class Model:
         ids = self.model.encode(prompt).tolist()[0]
         self.input_ids.extend(ids)
 
-    def update_input_ids(self, new_id: int):
-        self.input_ids.append(new_id)
-
     def generate_logits(self) -> list[float]:
         logits = self.model.get_logits_from_input_ids(self.input_ids)
 
         return logits
+
+    def write_token(self, token_id: int):
+        self.input_ids.append(token_id)
+        print(self.model.decode([token_id]), end="")

@@ -33,17 +33,21 @@ class StateMachine:
                 return False
         return True
 
-    def get_posible_next_ids(self) -> tuple[list, list]:
-        result = ([], [])
+    def get_allowed_ids(self) -> tuple[list, list]:
+        posible_functions = []
         allowed_ids = set()
         for func, ids in self.func_ids.items():
             if not self.__check_can_chose(func):
                 continue
-            result[0].append(func)
+            posible_functions.append(func)
             allowed_ids.add(ids[self.func_next_id_idx])
 
-        result[1].extend(allowed_ids)
-        return result
+        allowed_ids = list(allowed_ids)
+        return (posible_functions, allowed_ids)
+
+    def update_state(self, chosen_id: int):
+        self.func_next_id_idx += 1
+        self.old_chosen_ids.append(chosen_id)
 
     def get_correct_id(self, logits: list[float], allowed_ids: list) -> int:
         empty_vector = numpy.full(len(logits), -numpy.inf)
@@ -55,10 +59,6 @@ class StateMachine:
         new_logits = empty_vector.tolist()
 
         chosen_id: int = numpy.argmax(new_logits)  # type: ignore for numpy shit
-
-        self.old_chosen_ids.append(chosen_id)
-
-        self.func_next_id_idx += 1
 
         return chosen_id
 

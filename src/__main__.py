@@ -30,20 +30,16 @@ indent_level = 4
 model.set_input_ids()
 
 for _ in range(3):
-    posible_functions, allowed_ids = state.get_posible_next_ids()
+    posible_functions, allowed_ids = state.get_allowed_ids()
+    token_id = 0
     if len(posible_functions) == 1:
-
-        state.func_next_id_idx += 1
-
-        state.old_chosen_ids.append(allowed_ids[0])
-
-        print(model.model.decode(allowed_ids))
+        token_id = allowed_ids[0]
     else:
-        correct_id = state.get_correct_id(model.generate_logits(), allowed_ids)
-        model.update_input_ids(correct_id)
-        print(model.model.decode([correct_id]))
+        token_id = state.get_correct_id(model.generate_logits(), allowed_ids)
 
-
+    state.update_state(token_id)
+    model.write_token(token_id)
+print()
 # def get_indent(value: int):
 #     return "\n" + (" " * indent_level * value)
 
