@@ -23,13 +23,21 @@ model = Model(
     prompts_list,
     info.functions_definition_json,
 )
-state = StateMachine(model.model, info.functions_definition_json, len(prompts_list))
+state = StateMachine(model.model, info.functions_definition_json)
 
 indent_level = 4
 
 model.set_input_ids()
+print(
+    f"""[
+   {{
+      "prompt":"{model.prompts[model.prompt_idx]}",
+      "name":\"""",
+    end="",
+)
 
-for _ in range(3):
+
+while True:
     posible_functions, allowed_ids = state.get_allowed_ids()
     token_id = 0
     if len(posible_functions) == 1:
@@ -39,7 +47,29 @@ for _ in range(3):
 
     state.update_state(token_id)
     model.write_token(token_id)
-print()
+
+    if state.check_func_ids():
+        model.prompt_idx += 1
+        if model.prompt_idx >= len(model.prompts):
+            print("""\"
+    }
+]""")
+            break
+
+        print(
+            f"""\"
+    }},
+    {{
+        "prompt":"{model.prompts[model.prompt_idx]}",
+        "name":\"""",
+            end="",
+        )
+
+        model.input_ids = []
+        model.set_input_ids()
+        state.old_chosen_ids = []
+        state.func_next_id_idx = 0
+
 # def get_indent(value: int):
 #     return "\n" + (" " * indent_level * value)
 

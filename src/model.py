@@ -27,7 +27,6 @@ class Model:
             + f"\n\nuser query:\n'{self.prompts[self.prompt_idx]}'"
             + "\n\nanswer:\n"
         )
-        print(prompt)
         ids = self.model.encode(prompt).tolist()[0]
         self.input_ids.extend(ids)
 

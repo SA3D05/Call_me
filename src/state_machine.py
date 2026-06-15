@@ -9,17 +9,20 @@ from llm_sdk import Small_LLM_Model
 
 class StateMachine:
 
-    def __init__(
-        self, model: Small_LLM_Model, functions_json: list[dict], prompts_len: int
-    ):
+    def __init__(self, model: Small_LLM_Model, functions_json: list[dict]):
         self.current_state: State = State.FUN_NAME
         self.functions_json: list[dict] = functions_json
-        self.prompts_len = prompts_len
         self.prompt_idx = 0
         self.func_next_id_idx = 0
         self.old_chosen_ids = []
         self.model = model
         self.func_ids = self.__get_func_ids()
+
+    def check_func_ids(self):
+        for ids in self.func_ids.values():
+            if self.old_chosen_ids == ids:
+                return True
+        return False
 
     def get_state(self) -> State:
         return self.current_state
