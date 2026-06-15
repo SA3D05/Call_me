@@ -13,14 +13,17 @@ class StateMachine:
         self.current_state: State = State.FUN_NAME
         self.functions_json: list[dict] = functions_json
         self.prompt_idx = 0
+        self.current_func: str | None = None
         self.func_next_id_idx = 0
         self.old_chosen_ids = []
         self.model = model
         self.func_ids = self.__get_func_ids()
 
     def check_func_ids(self):
-        for ids in self.func_ids.values():
+        for func, ids in self.func_ids.items():
             if self.old_chosen_ids == ids:
+                self.current_func = func
+                self.current_state = State.PARAMETERS
                 return True
         return False
 
@@ -36,7 +39,7 @@ class StateMachine:
                 return False
         return True
 
-    def get_allowed_ids(self) -> tuple[list, list]:
+    def get_allowed_func_ids(self) -> tuple[list, list]:
         posible_functions = []
         allowed_ids = set()
         for func, ids in self.func_ids.items():
