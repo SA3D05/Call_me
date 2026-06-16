@@ -15,13 +15,15 @@ class StateMachine:
         self.prompt_idx = 0
         self.current_func: str | None = None
         self.func_next_id_idx = 0
-        self.old_chosen_ids = []
+        self.old_chosen_func_ids = []
+        self.old_chosen_args = []
+
         self.model = model
         self.func_ids = self.__get_func_ids()
 
     def check_func_ids(self):
         for func, ids in self.func_ids.items():
-            if self.old_chosen_ids == ids:
+            if self.old_chosen_func_ids == ids:
                 self.current_func = func
                 self.current_state = State.PARAMETERS
                 return True
@@ -34,7 +36,7 @@ class StateMachine:
         func_ids = self.func_ids[func]
         if len(func_ids) <= self.func_next_id_idx:
             return False
-        for i, func_id in enumerate(self.old_chosen_ids):
+        for i, func_id in enumerate(self.old_chosen_func_ids):
             if func_ids[i] != func_id:
                 return False
         return True
@@ -51,11 +53,27 @@ class StateMachine:
         allowed_ids = list(allowed_ids)
         return (posible_functions, allowed_ids)
 
+    def get_correct_arg_id(self, logits: list[float], arg_type: str, model: Model):
+
+        max_id: int = numpy.argmax(logits)  # type: ignore
+        id_decoded = self.model.decode([max_id])
+
+        if arg_type == "number":
+            if id_decoded.isdigit() or id_decoded == ".":
+                model.input_ids.append(max_id)
+                self.old_chosen_args.append(id_decoded)
+                print(id_decoded, end="")
+            elif '"' in id_decoded:
+                if "." not in self.old_chosen_args:
+                    print(".0", end="")
+                model.input_ids.append(max_id)
+                print('"', end="")
+
     def update_state(self, chosen_id: int):
         self.func_next_id_idx += 1
-        self.old_chosen_ids.append(chosen_id)
+        self.old_chosen_func_ids.append(chosen_id)
 
-    def get_correct_id(self, logits: list[float], allowed_ids: list) -> int:
+    def get_correct_func_id(self, logits: list[float], allowed_ids: list) -> int:
         empty_vector = numpy.full(len(logits), -numpy.inf)
 
         np_logits = numpy.array(logits)

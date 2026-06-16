@@ -33,16 +33,38 @@ state = StateMachine(model.model, info.functions_definition_json)
 
 
 def generate_parameters():
+    model.input_ids = []
+    state.old_chosen_func_ids = []
+    state.func_next_id_idx = 0
     model.write_json(State.PARAMETERS)
 
+    func = "fn_add_numbers"
+    model.set_input_ids(func if func else "")
 
-# generate_parameters()
+    for _ in range(10):
+
+        state.get_correct_arg_id(model.generate_logits(), "number", model)  # type: ignore
+
+        # model.write_token(numpy.argmax())
+        # model.write_param_end()
+
+    sys.exit()
 
 
-# model.set_input_ids("fn_add_numbers")
+generate_parameters()
 
-# model.write_token(numpy.argmax(model.generate_logits()))
+# try:
+#     model.set_input_ids("fn_reverse_string")
+#     while True:
+#         model.write_token(numpy.argmax(model.generate_logits()))  # type: ignore
+# except BaseException:
+#     pass
+
+
+# model.set_input_ids()
 # model.write_json(State.START)
+
+
 # while True:
 #     if state.current_state == State.FUN_NAME:
 #         posible_functions, allowed_ids = state.get_allowed_func_ids()
@@ -50,7 +72,7 @@ def generate_parameters():
 #         if len(posible_functions) == 1:
 #             token_id = allowed_ids[0]
 #         else:
-#             token_id = state.get_correct_id(model.generate_logits(), allowed_ids)
+#             token_id = state.get_correct_func_id(model.generate_logits(), allowed_ids)
 
 #         state.update_state(token_id)
 #         model.write_token(token_id)
@@ -61,10 +83,9 @@ def generate_parameters():
 #             if model.prompt_idx >= len(model.prompts):
 #                 model.write_json(State.END)
 #                 break
-#             model.write_json(State.PARAMETERS)
 #             model.input_ids = []
 #             model.set_input_ids()
-#             state.old_chosen_ids = []
+#             state.old_chosen_func_ids = []
 #             state.func_next_id_idx = 0
 
 #     elif state.current_state == State.PARAMETERS:

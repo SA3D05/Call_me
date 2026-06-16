@@ -1,17 +1,14 @@
-a = [
-    {
-        "prompt": "What is the sum of 2 and 3?",
-        "name": "fn_add_numbers",
-        "parameters": {
-            "a": 2.0,
-            "b": 3.0,
-        },
-    },
-    {
-        "prompt": "Reverse the string 'hello'",
-        "name": "fn_reverse_string",
-        "parameters": {
-            "s": "hello",
-        },
-    },
-]
+import re
+
+s = "Programming is fun"
+
+
+new_s = s.split(" ")
+
+for i in range(len(new_s)):
+    if re.search(new_s[i], ".*[aeiou].*"):
+        new_s[i] = "asterisks"
+s = ""
+for i in new_s:
+    s += i
+print(s)

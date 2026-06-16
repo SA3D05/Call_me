@@ -17,6 +17,15 @@ class Model:
         self.func_param_idx = 0
         self.parameter_write = False
 
+    def __get_func_params(self, target_func: str):
+        result = []
+        for func in self.functions:
+            if func["name"] == target_func:
+                for param in func["parameters"].keys():
+                    result.append(param)
+
+        return result
+
     def get_func_info(self, target_func: str = "") -> str:
         result = ""
         for func in self.functions:
@@ -33,11 +42,8 @@ class Model:
 
     def set_input_ids(self, target_func: str = ""):
         prompt = ""
-
         function_info = self.get_func_info(target_func)
-        args = [
-            func["parameters"] for func in self.functions if func["name"] == target_func
-        ]
+        parameters = self.__get_func_params(target_func)
 
         if target_func != "":
             prompt = (
@@ -45,10 +51,12 @@ class Model:
                 + " your goal is to extract the arguments for the function: "
                 + f"'{target_func}'"
                 + " from the user query."
+                + "\nseperate the aruments by ','"
                 + "\n\nfunction:\n"
                 + function_info
                 + f"\n\nuser query:\n'{self.prompts[self.prompt_idx]}'"
                 + "\n\nanswer:\n"
+                + f'"{parameters[0]}":"'
             )
 
         else:
@@ -62,7 +70,7 @@ class Model:
                 + f'"{self.prompts[self.prompt_idx]}"'
                 + "\n\nanswer:\n"
             )
-        print(prompt)
+        print(prompt, end="")
         ids = self.model.encode(prompt).tolist()[0]
         self.input_ids.extend(ids)
 
@@ -123,6 +131,19 @@ class Model:
         ]
 
         print(
+            self.get_indent(3),
+            f'"{param_name}":',
+            end="",
+            sep="",
+        )
+
+    def write_param_end(self):
+
+        param_name = list(self.functions[self.func_idx]["parameters"].keys())[
+            self.func_param_idx
+        ]
+        print(
+            f'",',
             self.get_indent(3),
             f'"{param_name}":',
             end="",
