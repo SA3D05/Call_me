@@ -15,16 +15,14 @@ class Model:
         self.input_ids: list[int] = []
         self.indent_level = 4
         self.func_param_idx = 0
-        self.parameter_write = False
+        self.func_params_names = []
 
-    def __get_func_params(self, target_func: str):
-        result = []
+    def __set_func_params(self, target_func: str):
+
         for func in self.functions:
             if func["name"] == target_func:
                 for param in func["parameters"].keys():
-                    result.append(param)
-
-        return result
+                    self.func_params_names.append(param)
 
     def get_func_info(self, target_func: str = "") -> str:
         result = ""
@@ -43,7 +41,7 @@ class Model:
     def set_input_ids(self, target_func: str = ""):
         prompt = ""
         function_info = self.get_func_info(target_func)
-        parameters = self.__get_func_params(target_func)
+        self.__set_func_params(target_func)
 
         if target_func != "":
             prompt = (
@@ -56,7 +54,7 @@ class Model:
                 + function_info
                 + f"\n\nuser query:\n'{self.prompts[self.prompt_idx]}'"
                 + "\n\nanswer:\n"
-                + f'"{parameters[0]}":"'
+                + f'"{self.func_params_names[0]}":"'
             )
 
         else:
@@ -167,13 +165,13 @@ class Model:
         elif state == State.FUN_NAME:
             self.__write_midd()
 
-        elif state == State.PARAMETERS:
-            if not self.parameter_write:
-                self.__write_parameters()
-                self.parameter_write = True
-            if self.func_param_idx < len(self.functions[self.func_idx]["parameters"]):
-                self.__write_param()
-                self.func_param_idx += 1
+        elif state == State.ARGUMENTS_START:
+            self.__write_parameters()
+
+        # elif state == State.ARGUMENTS_NEXT:
+        #     print(
+        #         self.get_indent(3), f'"{self.func_params_names[self.func_param_idx]}":'
+        #     )
 
         elif state == State.END:
             print('"', self.get_indent(1), "}\n", "]")

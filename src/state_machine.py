@@ -3,7 +3,7 @@ from pprint import pprint
 import numpy
 
 from .model import Model
-from .enums import State, BraceState, QuotationState
+from .enums import State
 from llm_sdk import Small_LLM_Model
 
 
@@ -53,7 +53,9 @@ class StateMachine:
         allowed_ids = list(allowed_ids)
         return (posible_functions, allowed_ids)
 
-    def get_correct_arg_id(self, logits: list[float], arg_type: str, model: Model):
+    def get_correct_arg_id(
+        self, logits: list[float], arg_type: str, model: Model
+    ) -> bool:
 
         max_id: int = numpy.argmax(logits)  # type: ignore
         id_decoded = self.model.decode([max_id])
@@ -64,10 +66,14 @@ class StateMachine:
                 self.old_chosen_args.append(id_decoded)
                 print(id_decoded, end="")
             elif '"' in id_decoded:
+
                 if "." not in self.old_chosen_args:
                     print(".0", end="")
+                print(id_decoded, end="")
                 model.input_ids.append(max_id)
-                print('"', end="")
+                self.old_chosen_args = []
+                return True
+        return False
 
     def update_state(self, chosen_id: int):
         self.func_next_id_idx += 1

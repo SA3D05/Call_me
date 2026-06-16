@@ -1,4 +1,4 @@
-from src.enums import QuotationState, State
+from src.enums import State
 
 from .state_machine import StateMachine
 
@@ -36,15 +36,13 @@ def generate_parameters():
     model.input_ids = []
     state.old_chosen_func_ids = []
     state.func_next_id_idx = 0
-    model.write_json(State.PARAMETERS)
+    # model.write_json(State.ARGUMENTS_START)
 
-    func = "fn_add_numbers"
-    model.set_input_ids(func if func else "")
+    model.set_input_ids("fn_add_numbers")
 
     for _ in range(10):
 
         state.get_correct_arg_id(model.generate_logits(), "number", model)  # type: ignore
-
         # model.write_token(numpy.argmax())
         # model.write_param_end()
 
