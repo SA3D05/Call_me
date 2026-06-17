@@ -3,3 +3,4 @@
 src/test.py
 src/__pycache__
 llm_sdl/__pycache__
+err.log

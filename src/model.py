@@ -1,3 +1,11 @@
+import sys
+
+# Disable Hugging Face progress bars
+import os
+
+os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+
+
 import numpy
 
 from llm_sdk import Small_LLM_Model
@@ -14,15 +22,15 @@ class Model:
         self.prompt_idx: int = 0
         self.input_ids: list[int] = []
         self.indent_level = 4
-        self.func_param_idx = 0
-        self.func_params_names = []
+        self.param_idx = 0
+        self.params_names = []
 
     def __set_func_params(self, target_func: str):
 
         for func in self.functions:
             if func["name"] == target_func:
                 for param in func["parameters"].keys():
-                    self.func_params_names.append(param)
+                    self.params_names.append(param)
 
     def get_func_info(self, target_func: str = "") -> str:
         result = ""
@@ -54,7 +62,7 @@ class Model:
                 + function_info
                 + f"\n\nuser query:\n'{self.prompts[self.prompt_idx]}'"
                 + "\n\nanswer:\n"
-                + f'"{self.func_params_names[0]}":"'
+                + f'"{self.params_names[0]}":"'
             )
 
         else:
@@ -68,8 +76,17 @@ class Model:
                 + f'"{self.prompts[self.prompt_idx]}"'
                 + "\n\nanswer:\n"
             )
-        print(prompt, end="")
+
+        print("Prompt:", prompt, file=sys.stderr)
         ids = self.model.encode(prompt).tolist()[0]
+        self.input_ids.extend(ids)
+
+    def update_input_ids(self):
+
+        param: str = self.params_names[self.param_idx]
+        self.param_idx += 1
+        prompt = f'", "{param}":"'
+        ids: list[int] = self.model.encode(prompt).tolist()[0]
         self.input_ids.extend(ids)
 
     def generate_logits(self) -> list[float]:
@@ -80,98 +97,3 @@ class Model:
     def write_token(self, token_id: int):
         self.input_ids.append(token_id)
         print(self.model.decode([token_id]), end="")
-
-    def get_indent(self, value: int):
-        return "\n" + (" " * self.indent_level * value)
-
-    def __write_prompt(self):
-        print(
-            self.get_indent(2),
-            '"prompt":"',
-            self.prompts[self.prompt_idx],
-            '",',
-            sep="",
-            end="",
-        )
-
-    def __write_name(self):
-        print(
-            self.get_indent(2),
-            '"name":"',
-            sep="",
-            end="",
-        )
-
-    def __write_start(self):
-        print(
-            "[",
-            self.get_indent(1),
-            "{",
-            sep="",
-            end="",
-        )
-
-    def __write_midd(self):
-        print(
-            '"',
-            self.get_indent(1),
-            "},",
-            self.get_indent(1),
-            "{",
-            sep="",
-            end="",
-        )
-
-    def __write_param(self):
-
-        param_name = list(self.functions[self.func_idx]["parameters"].keys())[
-            self.func_param_idx
-        ]
-
-        print(
-            self.get_indent(3),
-            f'"{param_name}":',
-            end="",
-            sep="",
-        )
-
-    def write_param_end(self):
-
-        param_name = list(self.functions[self.func_idx]["parameters"].keys())[
-            self.func_param_idx
-        ]
-        print(
-            f'",',
-            self.get_indent(3),
-            f'"{param_name}":',
-            end="",
-            sep="",
-        )
-
-    def __write_parameters(self):
-        print(
-            '",',
-            self.get_indent(2),
-            '"parameters":{',
-            end="",
-            sep="",
-        )
-
-    def write_json(self, state: State):
-        if state == State.START:
-            self.__write_start()
-            self.__write_prompt()
-            self.__write_name()
-        elif state == State.FUN_NAME:
-            self.__write_midd()
-
-        elif state == State.ARGUMENTS_START:
-            self.__write_parameters()
-
-        # elif state == State.ARGUMENTS_NEXT:
-        #     print(
-        #         self.get_indent(3), f'"{self.func_params_names[self.func_param_idx]}":'
-        #     )
-
-        elif state == State.END:
-            print('"', self.get_indent(1), "}\n", "]")

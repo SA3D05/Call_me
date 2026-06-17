@@ -1,4 +1,5 @@
 from pprint import pprint
+import sys
 
 import numpy
 
@@ -25,8 +26,9 @@ class StateMachine:
         for func, ids in self.func_ids.items():
             if self.old_chosen_func_ids == ids:
                 self.current_func = func
-                self.current_state = State.PARAMETERS
+                self.current_state = State.ARGUMENTS_START
                 return True
+
         return False
 
     def get_state(self) -> State:
@@ -59,20 +61,21 @@ class StateMachine:
 
         max_id: int = numpy.argmax(logits)  # type: ignore
         id_decoded = self.model.decode([max_id])
+        print("id_decoded:", f"'{id_decoded}'", file=sys.stderr)
 
         if arg_type == "number":
             if id_decoded.isdigit() or id_decoded == ".":
                 model.input_ids.append(max_id)
                 self.old_chosen_args.append(id_decoded)
                 print(id_decoded, end="")
-            elif '"' in id_decoded:
 
+            elif '"' in id_decoded:
                 if "." not in self.old_chosen_args:
                     print(".0", end="")
-                print(id_decoded, end="")
-                model.input_ids.append(max_id)
+                model.update_input_ids()
                 self.old_chosen_args = []
                 return True
+
         return False
 
     def update_state(self, chosen_id: int):

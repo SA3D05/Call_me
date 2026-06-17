@@ -1,4 +1,5 @@
 from src.enums import State
+from src.writer import Writer
 
 from .state_machine import StateMachine
 
@@ -23,8 +24,10 @@ model = Model(
     prompts_list,
     info.functions_definition_json,
 )
-state = StateMachine(model.model, info.functions_definition_json)
 
+
+state = StateMachine(model.model, info.functions_definition_json)
+writer = Writer(prompts_list, info.functions_definition_json)
 
 # model.set_input_ids()
 # model.write_json(State.START)
@@ -49,10 +52,39 @@ def generate_parameters():
     sys.exit()
 
 
-generate_parameters()
+def get_func_params(target_func: str):
+    result: list[str] = []
+    for func in info.functions_definition_json:
+        if func["name"] == target_func:
+            for param in func["parameters"].keys():
+                result.append(param)
+
+    return result
+
+
+writer.write_json(State.START)
+for i in range(len(prompts_list)):
+    parameters = get_func_params("fn_add_numbers")
+    model.set_input_ids("fn_add_numbers")
+
+    for param in parameters:
+
+        writer.write_json(State.PARAMETERS, param)
+        while True:
+            if state.get_correct_arg_id(model.generate_logits(), "number", model):  # type: ignore
+                break
+
+    if i <= len(prompts_list) - 2:
+        writer.move_next_prompt()
+        writer.write_json(State.FUN_NAME)
+    else:
+        writer.write_json(State.END)
+
+
+# generate_parameters()
+
 
 # try:
-#     model.set_input_ids("fn_reverse_string")
 #     while True:
 #         model.write_token(numpy.argmax(model.generate_logits()))  # type: ignore
 # except BaseException:
