@@ -75,13 +75,13 @@ class Model:
                 + "\nuser query:\n"
                 + f'"{self.prompts[self.prompt_idx]}"'
                 + "\n\nanswer:\n"
+                + "fn_"
             )
 
-        print("Prompt:", prompt, file=sys.stderr)
         ids = self.model.encode(prompt).tolist()[0]
         self.input_ids.extend(ids)
 
-    def update_input_ids(self):
+    def update_param_input_ids(self):
 
         param: str = self.params_names[self.param_idx]
         self.param_idx += 1

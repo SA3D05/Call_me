@@ -23,6 +23,7 @@ class Writer:
             '",',
             sep="",
             end="",
+            flush=True,
         )
 
     def __write_name(self):
@@ -31,6 +32,7 @@ class Writer:
             '"name":"',
             sep="",
             end="",
+            flush=True,
         )
 
     def __write_start(self):
@@ -40,6 +42,7 @@ class Writer:
             "{",
             sep="",
             end="",
+            flush=True,
         )
 
     def __write_midd(self):
@@ -50,6 +53,7 @@ class Writer:
             "},",
             sep="",
             end="",
+            flush=True,
         )
 
     def __write_parameters(self, arg: str):
@@ -66,6 +70,7 @@ class Writer:
                 ":",
                 end="",
                 sep="",
+                flush=True,
             )
 
         else:
@@ -78,6 +83,7 @@ class Writer:
                 ":",
                 end="",
                 sep="",
+                flush=True,
             )
 
         self.param_idx += 1

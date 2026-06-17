@@ -16,3 +16,8 @@ class State(Enum):
     ARGUMENTS_END = auto()
     ARGUMENTS_NEXT = auto()
     PARAMETERS = auto()
+
+
+class ArgType(Enum):
+    STRING = auto()
+    NUMBER = auto()

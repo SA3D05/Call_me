@@ -4,35 +4,31 @@ import sys
 import numpy
 
 from .model import Model
-from .enums import State
+from .enums import ArgType, State
 from llm_sdk import Small_LLM_Model
 
 
 class StateMachine:
 
     def __init__(self, model: Small_LLM_Model, functions_json: list[dict]):
-        self.current_state: State = State.FUN_NAME
         self.functions_json: list[dict] = functions_json
-        self.prompt_idx = 0
+        self.prompt_idx: int = 0
         self.current_func: str | None = None
-        self.func_next_id_idx = 0
-        self.old_chosen_func_ids = []
-        self.old_chosen_args = []
+        self.func_next_id_idx: int = 0
+        self.old_chosen_func_ids: list[int] = []
+        self.old_chosen_args: list[str] = []
 
         self.model = model
         self.func_ids = self.__get_func_ids()
+        self.params_end: bool = False
 
     def check_func_ids(self):
         for func, ids in self.func_ids.items():
             if self.old_chosen_func_ids == ids:
                 self.current_func = func
-                self.current_state = State.ARGUMENTS_START
                 return True
 
         return False
-
-    def get_state(self) -> State:
-        return self.current_state
 
     def __check_can_chose(self, func: str) -> bool:
         func_ids = self.func_ids[func]
@@ -55,28 +51,25 @@ class StateMachine:
         allowed_ids = list(allowed_ids)
         return (posible_functions, allowed_ids)
 
-    def get_correct_arg_id(
-        self, logits: list[float], arg_type: str, model: Model
-    ) -> bool:
+    def write_correct_arg_id(self, logits: list[float], arg_type: ArgType) -> int:
 
         max_id: int = numpy.argmax(logits)  # type: ignore
         id_decoded = self.model.decode([max_id])
-        print("id_decoded:", f"'{id_decoded}'", file=sys.stderr)
 
-        if arg_type == "number":
+        if arg_type == ArgType.NUMBER:
+
             if id_decoded.isdigit() or id_decoded == ".":
-                model.input_ids.append(max_id)
                 self.old_chosen_args.append(id_decoded)
                 print(id_decoded, end="")
 
             elif '"' in id_decoded:
                 if "." not in self.old_chosen_args:
                     print(".0", end="")
-                model.update_input_ids()
-                self.old_chosen_args = []
-                return True
 
-        return False
+                self.old_chosen_args = []
+                self.params_end = True
+
+        return max_id
 
     def update_state(self, chosen_id: int):
         self.func_next_id_idx += 1
@@ -95,7 +88,7 @@ class StateMachine:
 
         return chosen_id
 
-    def __get_func_ids(self) -> dict[str, list]:
+    def __get_func_ids(self) -> dict[str, list[int]]:
         result: dict[str, list] = {}
         for func in self.functions_json:
             func_name = func["name"]
