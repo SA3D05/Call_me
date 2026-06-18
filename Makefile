@@ -8,8 +8,8 @@ ARGS = --functions_definition $(FUNC_DEF)  --input   $(INPUT) --output  $(OUTPUT
 
 
 run:
-	@ uv run --with accelerate python -m src $(ARGS) 2>err.log
+	@ uv run --with accelerate python -m src $(ARGS)
 # 	@ python3 -m src $(ARGS)
 
 test:
-	@ python3 src/test.py
+	@ uv run --with accelerate python src/test.py

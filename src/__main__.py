@@ -66,6 +66,9 @@ def generate_arguments(target_func: str):
             arg_start = False
 
 
+generate_arguments("fn_substitute_string_with_regex")
+sys.exit()
+
 writer.write_json(State.START)
 model.set_input_ids()
 while True:
@@ -82,7 +85,7 @@ while True:
     model.write_token(token_id)
 
     if state.check_func_ids():
-        generate_arguments(state.current_func)
+        generate_arguments(state.current_func)  # type: ignore
         model.prompt_idx += 1
         writer.prompt_idx += 1
         if model.prompt_idx >= len(model.prompts):

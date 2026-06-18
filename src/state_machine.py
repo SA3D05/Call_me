@@ -57,7 +57,6 @@ class StateMachine:
 
         max_id: int = numpy.argmax(logits)  # type: ignore
         id_decoded = self.model.decode([max_id])
-        print(id_decoded, file=sys.stderr)
         if arg_type == ArgType.NUMBER:
 
             if id_decoded.isdigit() or id_decoded == ".":
@@ -77,7 +76,6 @@ class StateMachine:
             if '"' in id_decoded:
                 self.old_chosen_args = []
                 self.params_end = True
-                print('"', end="")
             else:
                 print(id_decoded, end="")
 

@@ -75,7 +75,7 @@ class Writer:
 
         else:
             print(
-                ",",
+                '",',
                 self.__indent(3),
                 '"',
                 arg,
