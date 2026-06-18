@@ -62,9 +62,7 @@ class Model:
                 + function_info
                 + f"\n\nuser query:\n'{self.prompts[self.prompt_idx]}'"
                 + "\n\nanswer:\n"
-                + f'"{self.params_names[0]}":"'
             )
-
         else:
             prompt = (
                 "You are a function selector agent,"
@@ -77,15 +75,20 @@ class Model:
                 + "\n\nanswer:\n"
                 + "fn_"
             )
-
         ids = self.model.encode(prompt).tolist()[0]
         self.input_ids.extend(ids)
 
     def update_param_input_ids(self):
 
         param: str = self.params_names[self.param_idx]
+        prompt = ""
+
+        if self.param_idx > 0:
+            prompt += '", '
+
+        prompt += f'"{param}":"'
+
         self.param_idx += 1
-        prompt = f'", "{param}":"'
         ids: list[int] = self.model.encode(prompt).tolist()[0]
         self.input_ids.extend(ids)
 

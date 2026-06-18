@@ -35,13 +35,14 @@ writer = Writer(prompts_list, info.functions_definition_json)
 # model.write_json(State.PARAMETERS)
 
 
-def get_func_params(target_func: str):
-    result: list[str] = []
+def get_func_params(target_func: str) -> dict[str, ArgType]:
+    result: dict[str, ArgType] = {}
     for func in info.functions_definition_json:
         if func["name"] == target_func:
-            for param in func["parameters"].keys():
-                result.append(param)
-
+            for param_name, param_type in func["parameters"].items():
+                result[param_name] = (
+                    ArgType.NUMBER if param_type["type"] == "number" else ArgType.STRING
+                )
     return result
 
 
@@ -49,32 +50,21 @@ def generate_arguments(target_func: str):
 
     parameters = get_func_params(target_func)
     model.set_input_ids(target_func)
+    arg_start = True
 
-    for param in parameters:
-
-        writer.write_json(State.PARAMETERS, param)
+    for param_name, param_type in parameters.items():
+        arg_start = True
+        model.update_param_input_ids()
+        writer.write_json(State.PARAMETERS, param_name)
         state.params_end = False
         while not state.params_end:
 
             correct_id = state.write_correct_arg_id(
-                model.generate_logits(), ArgType.NUMBER
+                model.generate_logits(), param_type, arg_start
             )
             model.input_ids.append(correct_id)
+            arg_start = False
 
-        model.update_param_input_ids()
-
-
-# generate_parameters()
-
-
-# try:
-#     while True:
-#         model.write_token(numpy.argmax(model.generate_logits()))  # type: ignore
-# except BaseException:
-#     pass
-
-
-# model.set_input_ids()
 
 writer.write_json(State.START)
 model.set_input_ids()
@@ -82,6 +72,7 @@ while True:
 
     posible_functions, allowed_ids = state.get_allowed_func_ids()
     token_id = 0
+
     if len(posible_functions) == 1:
         token_id = allowed_ids[0]
     else:
@@ -93,6 +84,7 @@ while True:
     if state.check_func_ids():
         generate_arguments(state.current_func)
         model.prompt_idx += 1
+        writer.prompt_idx += 1
         if model.prompt_idx >= len(model.prompts):
             writer.write_json(State.END)
             break
