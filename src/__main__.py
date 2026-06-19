@@ -1,3 +1,5 @@
+from time import sleep
+
 from src.enums import ArgType, State
 from src.writer import Writer
 
@@ -35,6 +37,11 @@ writer = Writer(prompts_list, info.functions_definition_json)
 # model.write_json(State.PARAMETERS)
 
 
+writer.build_obj_stack()
+print(len(writer.objs_stack))
+sys.exit()
+
+
 def get_func_params(target_func: str) -> dict[str, ArgType]:
     result: dict[str, ArgType] = {}
     for func in info.functions_definition_json:
@@ -65,9 +72,6 @@ def generate_arguments(target_func: str):
             model.input_ids.append(correct_id)
             arg_start = False
 
-
-generate_arguments("fn_substitute_string_with_regex")
-sys.exit()
 
 writer.write_json(State.START)
 model.set_input_ids()

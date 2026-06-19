@@ -57,12 +57,13 @@ class Model:
                 + " your goal is to extract the arguments for the function: "
                 + f"'{target_func}'"
                 + " from the user query."
-                + "\nseperate the aruments by ','"
+                + "\nseperate the aruments by newline"
                 + "\n\nfunction:\n"
                 + function_info
                 + f"\n\nuser query:\n'{self.prompts[self.prompt_idx]}'"
                 + "\n\nanswer:\n"
             )
+
         else:
             prompt = (
                 "You are a function selector agent,"

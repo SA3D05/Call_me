@@ -73,7 +73,15 @@ class StateMachine:
             # allow only ids that exist in the prompt
             if arg_start:
                 print('"', end="")
+
             if '"' in id_decoded:
+
+                for c in id_decoded:
+                    if c != '"':
+                        print(c, end="")
+                    else:
+                        break
+
                 self.old_chosen_args = []
                 self.params_end = True
             else:
