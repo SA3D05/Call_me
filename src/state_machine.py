@@ -51,9 +51,7 @@ class StateMachine:
         allowed_ids = list(allowed_ids)
         return (posible_functions, allowed_ids)
 
-    def write_correct_arg_id(
-        self, logits: list[float], arg_type: ArgType, arg_start: bool = False
-    ) -> int:
+    def write_correct_arg_id(self, logits: list[float], arg_type: ArgType) -> int:
 
         max_id: int = numpy.argmax(logits)  # type: ignore
         id_decoded = self.model.decode([max_id])
@@ -71,8 +69,6 @@ class StateMachine:
 
         else:
             # allow only ids that exist in the prompt
-            if arg_start:
-                print('"', end="")
 
             if '"' in id_decoded:
 

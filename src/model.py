@@ -53,15 +53,19 @@ class Model:
 
         if target_func != "":
             prompt = (
-                "You are a function parameters extractor agent,"
-                + " your goal is to extract the arguments for the function: "
-                + f"'{target_func}'"
-                + " from the user query."
-                + "\nseperate the aruments by newline"
-                + "\n\nfunction:\n"
-                + function_info
-                + f"\n\nuser query:\n'{self.prompts[self.prompt_idx]}'"
-                + "\n\nanswer:\n"
+                "You are a function parameter extractor.\n"
+                f"Extract the arguments for the function '{target_func}' based ONLY on the user query.\n"
+                "Format the output strictly as 'argument_name: value'. One per line. Do not write anything else.\n\n"
+                "# Example\n"
+                "Function: book_flight(destination, passengers)\n"
+                "Query: I want to fly to Paris with 2 people.\n"
+                "Answer:\n"
+                "destination: Paris\n"
+                "passengers: 2\n\n"
+                "# Task\n"
+                f"Function:\n{function_info}\n\n"
+                f"Query:\n{self.prompts[self.prompt_idx]}\n\n"
+                "Answer:\n"
             )
 
         else:
@@ -85,7 +89,7 @@ class Model:
         prompt = ""
 
         if self.param_idx > 0:
-            prompt += '", '
+            prompt += '"\n'
 
         prompt += f'"{param}":"'
 

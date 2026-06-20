@@ -31,16 +31,6 @@ model = Model(
 state = StateMachine(model.model, info.functions_definition_json)
 writer = Writer(prompts_list, info.functions_definition_json)
 
-# model.set_input_ids()
-# model.write_json(State.START)
-# print("fn_chil3ba", end="")
-# model.write_json(State.PARAMETERS)
-
-
-writer.build_obj_stack()
-print(len(writer.objs_stack))
-sys.exit()
-
 
 def get_func_params(target_func: str) -> dict[str, ArgType]:
     result: dict[str, ArgType] = {}
@@ -57,48 +47,56 @@ def generate_arguments(target_func: str):
 
     parameters = get_func_params(target_func)
     model.set_input_ids(target_func)
-    arg_start = True
 
-    for param_name, param_type in parameters.items():
-        arg_start = True
+    for param_type in parameters.values():
+        writer.write_next_param()
         model.update_param_input_ids()
-        writer.write_json(State.PARAMETERS, param_name)
         state.params_end = False
         while not state.params_end:
 
-            correct_id = state.write_correct_arg_id(
-                model.generate_logits(), param_type, arg_start
-            )
+            correct_id = state.write_correct_arg_id(model.generate_logits(), param_type)
             model.input_ids.append(correct_id)
-            arg_start = False
 
 
-writer.write_json(State.START)
+def generate_func():
+    while True:
+        posible_functions, allowed_ids = state.get_allowed_func_ids()
+        token_id = 0
+
+        if len(posible_functions) == 1:
+            token_id = allowed_ids[0]
+        else:
+            token_id = state.get_correct_func_id(model.generate_logits(), allowed_ids)
+
+        state.update_state(token_id)
+        model.write_token(token_id)
+        if state.check_func_ids():
+            return
+
+
+prompt_idx = 0
+writer.write_next_obj()
 model.set_input_ids()
-while True:
 
-    posible_functions, allowed_ids = state.get_allowed_func_ids()
-    token_id = 0
 
-    if len(posible_functions) == 1:
-        token_id = allowed_ids[0]
-    else:
-        token_id = state.get_correct_func_id(model.generate_logits(), allowed_ids)
+for _ in prompts_list:
 
-    state.update_state(token_id)
-    model.write_token(token_id)
+    generate_func()
+    func: str = state.current_func if state.current_func else ""
+    writer.build_context(func)
+    generate_arguments(func)
 
-    if state.check_func_ids():
-        generate_arguments(state.current_func)  # type: ignore
-        model.prompt_idx += 1
-        writer.prompt_idx += 1
-        if model.prompt_idx >= len(model.prompts):
-            writer.write_json(State.END)
-            break
-        writer.write_json(State.FUN_NAME)
-        model.input_ids = []
-        model.set_input_ids()
-        state.old_chosen_func_ids = []
-        state.func_next_id_idx = 0
+    model.prompt_idx += 1
+    if model.prompt_idx >= len(model.prompts):
+        break
 
-#     elif state.current_state == State.PARAMETERS:
+    writer.write_next_obj()
+    model.input_ids = []
+    model.set_input_ids()
+    state.old_chosen_func_ids = []
+    state.func_next_id_idx = 0
+
+
+# writer.write_end()
+# with open(info.output_path, "w") as f:
+#     f.write(writer.result)

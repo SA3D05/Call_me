@@ -1,24 +1,42 @@
+import sys
+
+
 class Writer:
 
     def __init__(self, prompts: list[str], functions: list[dict]) -> None:
 
         self.prompts = prompts
         self.functions = functions
-        self.function_context: str = ""
+
         self.indent_level: int = 4
         self.prompt_idx: int = 0
-        self.param_idx: int = 0
+
         self.result: str = ""
+        self.parameters_writted: bool = False
+
+        self.params: list[tuple[str, str]] = []
+        self.last_arg_type: str | None = None
+
+        self.json_start_writted: bool = False
 
     def __write(self, text: str):
         self.result += text
         print(text, end="", flush=True)
 
+    def build_context(self, func: str):
+        for f in self.functions:
+            if f["name"] != func:
+                continue
+            for param_name, param_type in f["parameters"].items():
+                self.params.insert(0, (param_name, param_type["type"]))
+
     def __indent(self, value: int = 0):
         return "\n" + (" " * self.indent_level * value)
 
-    def __write_prompt(self, prompt: str):
-        text: str = self.__indent(2) + '"prompt":"' + prompt + '",'
+    def __write_prompt(self):
+        text: str = (
+            self.__indent(2) + '"prompt":"' + self.prompts[self.prompt_idx] + '",'
+        )
         self.__write(text)
 
     def __write_name_start(self):
@@ -41,57 +59,81 @@ class Writer:
         text: str = self.__indent(1) + "{"
         self.__write(text)
 
-    def __write_obj_end(self, is_end: bool = False):
-        text: str = self.__indent(1) + "}"
+    def __write_obj_end(self):
 
-        if not is_end:
+        text: str = ""
+
+        if self.last_arg_type == "string":
+            text += '"'
+        text += self.__indent(2) + "}" + self.__indent(1) + "}"
+
+        if self.prompt_idx < len(self.prompts):
             text += ","
 
         self.__write(text)
 
-    def __write_midd(self):
-        text: str = self.__indent(2) + "}" + self.__indent(1) + "},"
-        self.__write(text)
-
-    def __write_arg_start(self, arg: str, is_string: bool = False):
+    def __write_arg_start(self, arg: str, param_type: str):
         text: str = self.__indent(3) + '"' + arg + '"' + ":" + " "
 
-        if is_string:
+        if param_type == "string":
             text += '"'
 
         self.__write(text)
 
-    def __write_arg_end(self, arg, is_string: bool = False, is_last: bool = False):
-        text: str = ""
+    def __write_arg_end(self, is_last: bool = False):
 
-        if is_string:
+        text: str = ""
+        if self.last_arg_type == "string":
             text += '"'
         if not is_last:
             text += ","
 
         self.__write(text)
 
-    def __write_parameters(self):
+    def __write_parameters_start(self):
         text: str = self.__indent(2) + '"parameters":{'
         self.__write(text)
 
-    def __write_end(self):
-        text: str = '",' + self.__indent(1) + "}" + self.__indent() + "]" + "\n"
+    def write_end(self):
+        text: str = ""
+        if self.last_arg_type == "string":
+            text += '"'
+        text += (
+            self.__indent(2)
+            + "}"
+            + self.__indent(1)
+            + "}"
+            + self.__indent()
+            + "]"
+            + "\n"
+        )
         self.__write(text)
 
-    def move_next_prompt(self):
-        self.param_idx = 0
-        self.prompt_idx += 1
+    def write_next_obj(self):
+        self.parameters_writted = False
 
-    def write_start(self, prompt: str):
+        if not self.json_start_writted:
+            self.__write_json_start()
+            self.json_start_writted = True
 
-        self.__write_json_start()
+        if self.prompt_idx != 0:
+            self.__write_obj_end()
+            self.last_arg_type = None
+
         self.__write_obj_start()
 
-        self.__write_prompt(prompt)
+        self.__write_prompt()
+        self.prompt_idx += 1
         self.__write_name_start()
 
-    # def write_parameter(self, arg_name: str):
-    #     self.__write_name_end()
-    #     self.__write_parameters()
-    #     self.__write_arg_start()
+    def write_next_param(self):
+        if not self.parameters_writted:
+            self.__write_name_end()
+            self.__write_parameters_start()
+            self.parameters_writted = True
+        if self.last_arg_type:
+            self.__write_arg_end()
+
+        param_name, param_type = self.params.pop()
+        self.last_arg_type = param_type
+        self.__write_arg_start(param_name, param_type)

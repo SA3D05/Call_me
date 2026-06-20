@@ -12,9 +12,10 @@ prompt = (
     + "\nseperate the aruments by newline"
     + "\n\nfunction:\n"
     + 'fn_substitute_string_with_regex(source_string: string, regex: string, replacement: string), description: "Replace all occurrences matching a regex pattern in a string."'
-    + f"\n\nuser query:\n'Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS'"
+    + f"\n\nuser query:\n'Replace all vowels in 'Programming is fun' with asterisks'"
     + "\n\nanswer:\n"
-    + '"source_string":"'
+    + 'source_string:"Programming is fun"\n'
+    + 'regex:"'
 )
 try:
     print(prompt, end="", flush=True)
