@@ -7,8 +7,8 @@ class GlobalInfo:
         self.functions_definition_path: str = ""
         self.input_path: str = ""
         self.output_path: str = ""
-        self.functions_definition_json: list[dict] = {}
-        self.input_json: list[dict] = {}
+        self.functions_definition_json: list[dict] = []
+        self.input_json: list[dict] = []
 
     def get_paths(self, args: list[str]) -> None:
         try:

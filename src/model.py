@@ -1,15 +1,4 @@
-import sys
-
-# Disable Hugging Face progress bars
-import os
-
-os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
-
-
-import numpy
-
 from llm_sdk import Small_LLM_Model
-from src.enums import State
 
 
 class Model:
@@ -46,54 +35,58 @@ class Model:
             result += "), description: " + func["description"] + "\n"
         return result
 
-    def set_input_ids(self, target_func: str = ""):
-        prompt = ""
-        function_info = self.get_func_info(target_func)
-        self.__set_func_params(target_func)
+    def set_func_input_ids(self, current_prompt: str):
 
-        if target_func != "":
-            prompt = (
-                "You are a function parameter extractor.\n"
-                f"Extract the arguments for the function '{target_func}' based ONLY on the user query.\n"
-                "Format the output strictly as 'argument_name: value'. One per line. Do not write anything else.\n\n"
-                "# Example\n"
-                "Function: book_flight(destination, passengers)\n"
-                "Query: I want to fly to Paris with 2 people.\n"
-                "Answer:\n"
-                "destination: Paris\n"
-                "passengers: 2\n\n"
-                "# Task\n"
-                f"Function:\n{function_info}\n\n"
-                f"Query:\n{self.prompts[self.prompt_idx]}\n\n"
-                "Answer:\n"
-            )
+        functions_info = self.get_func_info()
 
-        else:
-            prompt = (
-                "You are a function selector agent,"
-                + " your goal is to select the correct"
-                + " function name based on the user query."
-                + "\n\nfunctions:\n"
-                + function_info
-                + "\nuser query:\n"
-                + f'"{self.prompts[self.prompt_idx]}"'
-                + "\n\nanswer:\n"
-                + "fn_"
-            )
+        prompt = (
+            "You are a function selector agent,"
+            + " your goal is to select the correct"
+            + " function name based on the user query."
+            + "\n\nfunctions:\n"
+            + functions_info
+            + "\nuser query:\n"
+            + f'"{current_prompt}"'
+            + "\n\nanswer:\n"
+            + "fn_"
+        )
+        self.input_ids = []
         ids = self.model.encode(prompt).tolist()[0]
         self.input_ids.extend(ids)
 
-    def update_param_input_ids(self):
+    def set_param_input_ids(self, target_func: str, current_prompt: str):
 
-        param: str = self.params_names[self.param_idx]
+        function_info = self.get_func_info(target_func)
+        self.__set_func_params(target_func)
+
+        prompt = (
+            "You are a function parameter extractor.\n"
+            f"Extract the arguments for the function '{target_func}' based ONLY on the user query.\n"
+            "Format the output strictly as 'argument_name: value'. One per line. Do not write anything else.\n\n"
+            "# Example\n"
+            "Function: book_flight(destination, passengers)\n"
+            "Query: I want to fly to Paris with 2 people.\n"
+            "Answer:\n"
+            "destination: Paris\n"
+            "passengers: 2\n\n"
+            "# Task\n"
+            f"Function:\n{function_info}\n\n"
+            f"Query:\n{current_prompt}\n\n"
+            "Answer:\n"
+        )
+        self.input_ids = []
+        ids = self.model.encode(prompt).tolist()[0]
+        self.input_ids.extend(ids)
+
+    def update_param_input_ids(self, is_first: bool, next_param_name: str):
+
         prompt = ""
 
-        if self.param_idx > 0:
+        if not is_first:
             prompt += '"\n'
 
-        prompt += f'"{param}":"'
+        prompt += f'"{next_param_name}":"'
 
-        self.param_idx += 1
         ids: list[int] = self.model.encode(prompt).tolist()[0]
         self.input_ids.extend(ids)
 
@@ -102,6 +95,6 @@ class Model:
 
         return logits
 
-    def write_token(self, token_id: int):
+    def set_token_id(self, token_id: int) -> str:
         self.input_ids.append(token_id)
-        print(self.model.decode([token_id]), end="")
+        return self.model.decode([token_id])

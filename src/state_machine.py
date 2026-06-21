@@ -1,10 +1,5 @@
-from pprint import pprint
-import sys
-
 import numpy
 
-from .model import Model
-from .enums import ArgType, State
 from llm_sdk import Small_LLM_Model
 
 
@@ -14,8 +9,6 @@ class StateMachine:
         self.functions_json: list[dict] = functions_json
         self.prompt_idx: int = 0
         self.current_func: str | None = None
-        self.func_next_id_idx: int = 0
-        self.old_chosen_func_ids: list[int] = []
         self.old_chosen_args: list[str] = []
 
         self.model = model
@@ -30,32 +23,44 @@ class StateMachine:
 
         return False
 
-    def __check_can_chose(self, func: str) -> bool:
-        func_ids = self.func_ids[func]
-        if len(func_ids) <= self.func_next_id_idx:
+    def __check_can_chose(
+        self, func: str, current_id_idx: int, old_chosen_ids: list[int]
+    ) -> bool:
+
+        current_func_ids = self.func_ids[func]
+
+        if len(current_func_ids) <= current_id_idx:
             return False
-        for i, func_id in enumerate(self.old_chosen_func_ids):
-            if func_ids[i] != func_id:
+
+        for i, old_func_id in enumerate(old_chosen_ids):
+            if current_func_ids[i] != old_func_id:
                 return False
+
         return True
 
-    def get_allowed_func_ids(self) -> tuple[list, list]:
+    def get_allowed_func_ids(
+        self, current_id_idx: int, old_chosen_ids: list[int]
+    ) -> tuple[list, list]:
         posible_functions = []
         allowed_ids = set()
+
         for func, ids in self.func_ids.items():
-            if not self.__check_can_chose(func):
+
+            if not self.__check_can_chose(func, current_id_idx, old_chosen_ids):
                 continue
+
             posible_functions.append(func)
-            allowed_ids.add(ids[self.func_next_id_idx])
+
+            allowed_ids.add(ids[current_id_idx])
 
         allowed_ids = list(allowed_ids)
         return (posible_functions, allowed_ids)
 
-    def write_correct_arg_id(self, logits: list[float], arg_type: ArgType) -> int:
+    def write_correct_arg_id(self, logits: list[float], arg_type: str) -> int:
 
-        max_id: int = numpy.argmax(logits)  # type: ignore
+        max_id = int(numpy.argmax(logits))
         id_decoded = self.model.decode([max_id])
-        if arg_type == ArgType.NUMBER:
+        if arg_type == "number":
 
             if id_decoded.isdigit() or id_decoded == ".":
                 self.old_chosen_args.append(id_decoded)
@@ -68,7 +73,6 @@ class StateMachine:
                 self.params_end = True
 
         else:
-            # allow only ids that exist in the prompt
 
             if '"' in id_decoded:
 
@@ -98,7 +102,7 @@ class StateMachine:
 
         new_logits = empty_vector.tolist()
 
-        chosen_id: int = numpy.argmax(new_logits)  # type: ignore for numpy shit
+        chosen_id = int(numpy.argmax(new_logits))
 
         return chosen_id
 
