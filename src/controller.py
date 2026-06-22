@@ -1,4 +1,4 @@
-from pprint import pprint
+import numpy
 
 from llm_sdk import Small_LLM_Model
 from src.model import Model
@@ -20,25 +20,14 @@ class Controller:
         self.state_machine = StateMachine(self.model.model, func_def)
         self.writer = Writer(prompts, func_def)
 
-        # pprint(self.__dict__)
-
     def start_generating(self) -> None:
 
         for p in self.prompts:
 
+            self.writer.write_next_obj()
             current_func = self.__generate_func_name(p)
-            # writer.build_context(func)
             self.__generate_arguments(current_func, p)
-
-            # model.prompt_idx += 1
-            # if model.prompt_idx >= len(model.prompts):
-            #     break
-
-            # writer.write_next_obj()
-            # model.input_ids = []
-            # model.set_input_ids()
-            # state.old_chosen_func_ids = []
-            # state.func_next_id_idx = 0
+        self.writer.write_end()
 
     def __get_func_parameters(self, target_func: str) -> dict[str, str]:
         result: dict[str, str] = {}
@@ -52,7 +41,6 @@ class Controller:
         result: str = ""
         id_idx: int = 0
 
-        print(f"{prompt}:", end=" ", flush=True)
         model = self.model
         model.set_func_input_ids(prompt)
 
@@ -73,23 +61,25 @@ class Controller:
             token = model.set_token_id(correct_id)
             result += token
             print(token, end="", flush=True)
-        print()
         return result
 
     def __generate_arguments(self, target_func: str, prompt: str):
 
+        self.writer.build_context(target_func)
         parameters = self.__get_func_parameters(target_func)
         self.model.set_param_input_ids(target_func, prompt)
         is_first: bool = True
+
         for param_name, param_type in parameters.items():
-            # self.writer.write_next_param()
+            self.writer.write_next_param()
             self.model.update_param_input_ids(is_first, param_name)
             is_first = False
             self.state_machine.params_end = False
+
             while not self.state_machine.params_end:
 
-                correct_id = self.state_machine.write_correct_arg_id(
+                correct_id, result = self.state_machine.get_correct_arg(
                     self.model.generate_logits(), param_type
                 )
+                print(result, end="", flush=True)
                 self.model.input_ids.append(correct_id)
-            print()

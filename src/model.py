@@ -60,7 +60,8 @@ class Model:
         self.__set_func_params(target_func)
 
         prompt = (
-            "You are a function parameter extractor.\n"
+            "You are a data extraction tool. Do NOT solve math problems. Do NOT answer questions. "
+            "Only extract the raw numbers or words from the query that match the function parameters.\n\n"
             f"Extract the arguments for the function '{target_func}' based ONLY on the user query.\n"
             "Format the output strictly as 'argument_name: value'. One per line. Do not write anything else.\n\n"
             "# Example\n"

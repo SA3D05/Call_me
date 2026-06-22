@@ -7,21 +7,10 @@ class StateMachine:
 
     def __init__(self, model: Small_LLM_Model, functions_json: list[dict]):
         self.functions_json: list[dict] = functions_json
-        self.prompt_idx: int = 0
-        self.current_func: str | None = None
-        self.old_chosen_args: list[str] = []
-
         self.model = model
         self.func_ids = self.__get_func_ids()
-        self.params_end: bool = False
-
-    def check_func_ids(self):
-        for func, ids in self.func_ids.items():
-            if self.old_chosen_func_ids == ids:
-                self.current_func = func
-                return True
-
-        return False
+        self.params_end = False
+        self.old_chosen_args: list[str] = []
 
     def __check_can_chose(
         self, func: str, current_id_idx: int, old_chosen_ids: list[int]
@@ -56,42 +45,44 @@ class StateMachine:
         allowed_ids = list(allowed_ids)
         return (posible_functions, allowed_ids)
 
-    def write_correct_arg_id(self, logits: list[float], arg_type: str) -> int:
+    def get_correct_arg(self, logits: list[float], arg_type: str) -> tuple[int, str]:
 
         max_id = int(numpy.argmax(logits))
         id_decoded = self.model.decode([max_id])
+        result = ""
+
         if arg_type == "number":
 
             if id_decoded.isdigit() or id_decoded == ".":
                 self.old_chosen_args.append(id_decoded)
-                print(id_decoded, end="")
+                result = id_decoded
 
             elif '"' in id_decoded:
-                if "." not in self.old_chosen_args:
-                    print(".0", end="")
+                for c in id_decoded:
+                    if c == '"':
+                        break
+                    result += c
+
+                if "." not in result and "." not in self.old_chosen_args:
+                    result += ".0"
+
                 self.old_chosen_args = []
                 self.params_end = True
 
         else:
 
             if '"' in id_decoded:
-
                 for c in id_decoded:
-                    if c != '"':
-                        print(c, end="")
-                    else:
+                    if c == '"':
                         break
+                    result += c
 
                 self.old_chosen_args = []
                 self.params_end = True
             else:
-                print(id_decoded, end="")
+                result += id_decoded
 
-        return max_id
-
-    def update_state(self, chosen_id: int):
-        self.func_next_id_idx += 1
-        self.old_chosen_func_ids.append(chosen_id)
+        return (max_id, result)
 
     def get_correct_func_id(self, logits: list[float], allowed_ids: list) -> int:
         empty_vector = numpy.full(len(logits), -numpy.inf)
