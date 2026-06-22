@@ -1,7 +1,4 @@
-from src.controller import Controller
-from src.writer import Writer
-from .state_machine import StateMachine
-from .model import Model
+from .controller import Controller
 from .parsing import GlobalInfo
 import sys
 

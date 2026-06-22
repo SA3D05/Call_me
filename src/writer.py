@@ -1,6 +1,3 @@
-import sys
-
-
 class Writer:
 
     def __init__(self, prompts: list[str], functions: list[dict]) -> None:
@@ -34,9 +31,14 @@ class Writer:
         return "\n" + (" " * self.indent_level * value)
 
     def __write_prompt(self):
-        text: str = (
-            self.__indent(2) + '"prompt":"' + self.prompts[self.prompt_idx] + '",'
-        )
+        text: str = self.__indent(2) + '"prompt":"'
+
+        for c in self.prompts[self.prompt_idx]:
+            if c == '"' or c == "\\":
+                text += "\\"
+            text += c
+
+        text += '",'
         self.__write(text)
 
     def __write_name_start(self):
@@ -49,10 +51,6 @@ class Writer:
 
     def __write_json_start(self):
         text: str = "["
-        self.__write(text)
-
-    def __write_json_end(self):
-        text: str = "]"
         self.__write(text)
 
     def __write_obj_start(self):

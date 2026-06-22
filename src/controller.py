@@ -1,9 +1,6 @@
-import numpy
-
-from llm_sdk import Small_LLM_Model
-from src.model import Model
-from src.state_machine import StateMachine
-from src.writer import Writer
+from .model import Model
+from .state_machine import StateMachine
+from .writer import Writer
 
 
 class Controller:
@@ -26,8 +23,12 @@ class Controller:
 
             self.writer.write_next_obj()
             current_func = self.__generate_func_name(p)
+            self.writer.result += current_func
             self.__generate_arguments(current_func, p)
+
         self.writer.write_end()
+        with open(self.output_file, "w") as f:
+            f.write(self.writer.result)
 
     def __get_func_parameters(self, target_func: str) -> dict[str, str]:
         result: dict[str, str] = {}
@@ -81,5 +82,6 @@ class Controller:
                 correct_id, result = self.state_machine.get_correct_arg(
                     self.model.generate_logits(), param_type
                 )
+                self.writer.result += result
                 print(result, end="", flush=True)
                 self.model.input_ids.append(correct_id)
