@@ -1,5 +1,23 @@
 import json
 import sys
+from typing import Literal
+from pydantic import BaseModel, TypeAdapter
+import pydantic
+
+
+class ObjType(BaseModel):
+    type: Literal["number", "string"]
+
+
+class FunctionDef(BaseModel):
+    name: str
+    description: str
+    parameters: dict[str, ObjType]
+    returns: ObjType
+
+
+class InputPrompt(BaseModel):
+    prompt: str
 
 
 class GlobalInfo:
@@ -41,9 +59,18 @@ class GlobalInfo:
                 data = ""
                 with open(path, "r") as f:
                     data = f.read()
+                # if attr == "functions_definition":
+                #     adapter = TypeAdapter(list[FunctionDef])
+                # else:
+                #     adapter = TypeAdapter(list[InputPrompt])
 
+                # adapter.validate_json(data)
                 setattr(self, attr + "_json", json.loads(data))
-
+        except pydantic.ValidationError as e:
+            print("File", f'"{path}"')
+            print(f"Error: Json not valid")
+            print(e)
+            sys.exit()
         except OSError as e:
             print("File", f'"{path}"')
             print(f"Error: {e.strerror}")

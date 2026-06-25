@@ -52,24 +52,20 @@ class StateMachine:
 
         if arg_type == "number":
 
-            if id_decoded.isdigit() or id_decoded == ".":
-                self.old_chosen_args.append(id_decoded)
-                result = id_decoded
-
-            elif '"' in id_decoded:
+            if '"' in id_decoded:
                 for c in id_decoded:
                     if c == '"':
                         break
                     result += c
-
                 if "." not in result and "." not in self.old_chosen_args:
                     result += ".0"
-
                 self.old_chosen_args = []
                 self.params_end = True
+            else:
+                self.old_chosen_args.append(id_decoded)
+                result = id_decoded
 
         else:
-
             if '"' in id_decoded:
                 for c in id_decoded:
                     if c == '"':
@@ -79,20 +75,18 @@ class StateMachine:
                 self.old_chosen_args = []
                 self.params_end = True
             else:
-                result += id_decoded
+                result = id_decoded
 
         return (max_id, result)
 
     def get_correct_func_id(self, logits: list[float], allowed_ids: list) -> int:
-        empty_vector = numpy.full(len(logits), -numpy.inf)
+        masked_logits = numpy.full(len(logits), -numpy.inf)
 
         np_logits = numpy.array(logits)
 
-        empty_vector[allowed_ids] = np_logits[allowed_ids]
+        masked_logits[allowed_ids] = np_logits[allowed_ids]
 
-        new_logits = empty_vector.tolist()
-
-        chosen_id = int(numpy.argmax(new_logits))
+        chosen_id = int(numpy.argmax(masked_logits))
 
         return chosen_id
 
