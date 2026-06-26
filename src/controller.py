@@ -50,13 +50,19 @@ class Controller:
 
         while result not in functions:
             logits = model.generate_logits()
-            posible_functions, allowed_ids = self.state_machine.get_allowed_func_ids(
-                id_idx, old_chosen_ids
+            posible_functions, allowed_ids = (
+                self.state_machine.get_allowed_func_ids(
+                    id_idx,
+                    old_chosen_ids,
+                )
             )
             if len(posible_functions) == 1:
                 pass
 
-            correct_id = self.state_machine.get_correct_func_id(logits, allowed_ids)
+            correct_id = self.state_machine.get_correct_func_id(
+                logits,
+                allowed_ids,
+            )
             old_chosen_ids.append(correct_id)
             id_idx += 1
             token = model.set_token_id(correct_id)
@@ -64,7 +70,7 @@ class Controller:
             print(token, end="", flush=True)
         return result
 
-    def __generate_arguments(self, target_func: str, prompt: str):
+    def __generate_arguments(self, target_func: str, prompt: str) -> None:
 
         self.writer.build_context(target_func)
         parameters = self.__get_func_parameters(target_func)

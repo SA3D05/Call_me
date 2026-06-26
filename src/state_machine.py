@@ -34,17 +34,24 @@ class StateMachine:
 
         for func, ids in self.func_ids.items():
 
-            if not self.__check_can_chose(func, current_id_idx, old_chosen_ids):
+            if not self.__check_can_chose(
+                func,
+                current_id_idx,
+                old_chosen_ids,
+            ):
                 continue
 
             posible_functions.append(func)
 
             allowed_ids.add(ids[current_id_idx])
 
-        allowed_ids = list(allowed_ids)
-        return (posible_functions, allowed_ids)
+        return (posible_functions, list(allowed_ids))
 
-    def get_correct_arg(self, logits: list[float], arg_type: str) -> tuple[int, str]:
+    def get_correct_arg(
+        self,
+        logits: list[float],
+        arg_type: str,
+    ) -> tuple[int, str]:
 
         max_id = int(numpy.argmax(logits))
         id_decoded = self.model.decode([max_id])
@@ -79,7 +86,11 @@ class StateMachine:
 
         return (max_id, result)
 
-    def get_correct_func_id(self, logits: list[float], allowed_ids: list) -> int:
+    def get_correct_func_id(
+        self,
+        logits: list[float],
+        allowed_ids: list,
+    ) -> int:
         masked_logits = numpy.full(len(logits), -numpy.inf)
 
         np_logits = numpy.array(logits)

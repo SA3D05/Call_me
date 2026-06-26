@@ -10,7 +10,10 @@ class ObjType(BaseModel):
     type: Literal["number", "string", "boolean", "integer"]
 
 
-non_empty = Annotated[str, StringConstraints(min_length=1, strip_whitespace=True)]
+non_empty = Annotated[
+    str,
+    StringConstraints(min_length=1, strip_whitespace=True),
+]
 
 
 class FunctionDef(BaseModel):
@@ -26,12 +29,19 @@ class InputPrompt(BaseModel):
     prompt: non_empty
 
 
-list_func_def = Annotated[list[FunctionDef], StringConstraints(min_length=1)]
-list_input_prompt = Annotated[list[InputPrompt], StringConstraints(min_length=1)]
+list_func_def = Annotated[
+    list[FunctionDef],
+    StringConstraints(min_length=1),
+]
+list_input_prompt = Annotated[
+    list[InputPrompt],
+    StringConstraints(min_length=1),
+]
 
 
 class GlobalInfo:
-    def __init__(self):
+
+    def __init__(self) -> None:
         self.functions_definition_path: str = ""
         self.input_path: str = ""
         self.output_path: str = ""
@@ -81,7 +91,7 @@ class GlobalInfo:
 
         except pydantic.ValidationError as e:
             print("File", f'"{path}"')
-            print(f"Error: Json not valid")
+            print("Error: Json not valid")
             for error in e.errors():
                 print(f"Field {error['loc']}: {error['msg']}")
 

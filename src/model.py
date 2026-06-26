@@ -12,9 +12,9 @@ class Model:
         self.input_ids: list[int] = []
         self.indent_level = 4
         self.param_idx = 0
-        self.params_names = []
+        self.params_names: list = []
 
-    def __set_func_params(self, target_func: str):
+    def __set_func_params(self, target_func: str) -> None:
 
         for func in self.functions:
             if func["name"] == target_func:
@@ -35,7 +35,7 @@ class Model:
             result += "), description: " + func["description"] + "\n"
         return result
 
-    def set_func_input_ids(self, current_prompt: str):
+    def set_func_input_ids(self, current_prompt: str) -> None:
 
         functions_info = self.get_func_info()
 
@@ -54,16 +54,24 @@ class Model:
         ids = self.model.encode(prompt).tolist()[0]
         self.input_ids.extend(ids)
 
-    def set_param_input_ids(self, target_func: str, current_prompt: str):
+    def set_param_input_ids(
+        self,
+        target_func: str,
+        current_prompt: str,
+    ) -> None:
 
         function_info = self.get_func_info(target_func)
         self.__set_func_params(target_func)
 
         prompt = (
-            "You are a data extraction tool. Do NOT solve math problems. Do NOT answer questions. "
-            "Only extract the raw numbers or words from the query that match the function parameters.\n\n"
-            f"Extract the arguments for the function '{target_func}' based ONLY on the user query.\n"
-            "Format the output strictly as 'argument_name: value'. One per line. Do not write anything else.\n\n"
+            "You are a data extraction tool."
+            "Do NOT solve math problems. Do NOT answer questions. "
+            "Only extract the raw numbers or words from the query "
+            "that match the function parameters.\n\n"
+            f"Extract the arguments for the function '{target_func}' "
+            "based ONLY on the user query.\n"
+            "Format the output strictly as 'argument_name: value'. "
+            "One per line. Do not write anything else.\n\n"
             "# Example\n"
             "Function: book_flight(destination, passengers)\n"
             "Query: I want to fly to Paris with 2 people.\n"
@@ -79,7 +87,11 @@ class Model:
         ids = self.model.encode(prompt).tolist()[0]
         self.input_ids.extend(ids)
 
-    def update_param_input_ids(self, is_first: bool, next_param_name: str):
+    def update_param_input_ids(
+        self,
+        is_first: bool,
+        next_param_name: str,
+    ) -> None:
 
         prompt = ""
 

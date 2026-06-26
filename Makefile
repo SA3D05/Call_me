@@ -11,3 +11,18 @@ ARGS = --functions_definition $(FUNC_DEF)  --input   $(INPUT) --output  $(OUTPUT
 
 run:
 	uv run python -m src $(ARGS)
+
+install:
+	uv sync
+
+debug:
+	python3 -m pdb main.py
+
+clean:
+	rm -rf .mypy_cache
+	find . -name "__pycache__" -type d -exec rm -rf {} +
+
+
+lint:
+	mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	flake8 --extend-exclude=.venv .

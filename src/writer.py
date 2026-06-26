@@ -16,21 +16,21 @@ class Writer:
 
         self.json_start_writted: bool = False
 
-    def __write(self, text: str):
+    def __write(self, text: str) -> None:
         self.result += text
         print(text, end="", flush=True)
 
-    def build_context(self, func: str):
+    def build_context(self, func: str) -> None:
         for f in self.functions:
             if f["name"] != func:
                 continue
             for param_name, param_type in f["parameters"].items():
                 self.params.insert(0, (param_name, param_type["type"]))
 
-    def __indent(self, value: int = 0):
+    def __indent(self, value: int = 0) -> str:
         return "\n" + (" " * self.indent_level * value)
 
-    def __write_prompt(self):
+    def __write_prompt(self) -> None:
         text: str = self.__indent(2) + '"prompt":"'
 
         for c in self.prompts[self.prompt_idx]:
@@ -41,23 +41,23 @@ class Writer:
         text += '",'
         self.__write(text)
 
-    def __write_name_start(self):
+    def __write_name_start(self) -> None:
         text: str = self.__indent(2) + '"name":"'
         self.__write(text)
 
-    def __write_name_end(self):
+    def __write_name_end(self) -> None:
         text: str = '",'
         self.__write(text)
 
-    def __write_json_start(self):
+    def __write_json_start(self) -> None:
         text: str = "["
         self.__write(text)
 
-    def __write_obj_start(self):
+    def __write_obj_start(self) -> None:
         text: str = self.__indent(1) + "{"
         self.__write(text)
 
-    def __write_obj_end(self):
+    def __write_obj_end(self) -> None:
 
         text: str = ""
 
@@ -70,7 +70,7 @@ class Writer:
 
         self.__write(text)
 
-    def __write_arg_start(self, arg: str, param_type: str):
+    def __write_arg_start(self, arg: str, param_type: str) -> None:
         text: str = self.__indent(3) + '"' + arg + '"' + ":" + " "
 
         if param_type == "string":
@@ -78,7 +78,7 @@ class Writer:
 
         self.__write(text)
 
-    def __write_arg_end(self, is_last: bool = False):
+    def __write_arg_end(self, is_last: bool = False) -> None:
 
         text: str = ""
         if self.last_arg_type == "string":
@@ -88,11 +88,11 @@ class Writer:
 
         self.__write(text)
 
-    def __write_parameters_start(self):
+    def __write_parameters_start(self) -> None:
         text: str = self.__indent(2) + '"parameters":{'
         self.__write(text)
 
-    def write_end(self):
+    def write_end(self) -> None:
         text: str = ""
         if self.last_arg_type == "string":
             text += '"'
@@ -107,7 +107,7 @@ class Writer:
         )
         self.__write(text)
 
-    def write_next_obj(self):
+    def write_next_obj(self) -> None:
         self.parameters_writted = False
 
         if not self.json_start_writted:
@@ -124,7 +124,7 @@ class Writer:
         self.prompt_idx += 1
         self.__write_name_start()
 
-    def write_next_param(self):
+    def write_next_param(self) -> None:
         if not self.parameters_writted:
             self.__write_name_end()
             self.__write_parameters_start()
