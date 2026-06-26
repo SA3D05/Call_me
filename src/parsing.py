@@ -1,23 +1,33 @@
 import json
 import sys
-from typing import Literal
-from pydantic import BaseModel, TypeAdapter
+from typing import Literal, Annotated
+from pydantic import BaseModel, StringConstraints, TypeAdapter
 import pydantic
 
 
 class ObjType(BaseModel):
-    type: Literal["number", "string"]
+    model_config = {"extra": "forbid"}
+    type: Literal["number", "string", "boolean", "integer"]
+
+
+non_empty = Annotated[str, StringConstraints(min_length=1, strip_whitespace=True)]
 
 
 class FunctionDef(BaseModel):
-    name: str
-    description: str
-    parameters: dict[str, ObjType]
+    model_config = {"extra": "forbid"}
+    name: non_empty
+    description: non_empty
+    parameters: dict[non_empty, ObjType]
     returns: ObjType
 
 
 class InputPrompt(BaseModel):
-    prompt: str
+    model_config = {"extra": "forbid"}
+    prompt: non_empty
+
+
+list_func_def = Annotated[list[FunctionDef], StringConstraints(min_length=1)]
+list_input_prompt = Annotated[list[InputPrompt], StringConstraints(min_length=1)]
 
 
 class GlobalInfo:
@@ -59,17 +69,22 @@ class GlobalInfo:
                 data = ""
                 with open(path, "r") as f:
                     data = f.read()
-                # if attr == "functions_definition":
-                #     adapter = TypeAdapter(list[FunctionDef])
-                # else:
-                #     adapter = TypeAdapter(list[InputPrompt])
+                if attr == "functions_definition":
+                    adapter = TypeAdapter(list_func_def)
+                else:
+                    adapter = TypeAdapter(list_input_prompt)
 
-                # adapter.validate_json(data)
+                adapter.validate_json(data)
                 setattr(self, attr + "_json", json.loads(data))
+            if len(self.input_json) == 0:
+                raise ValueError("No prompt are provided")
+
         except pydantic.ValidationError as e:
             print("File", f'"{path}"')
             print(f"Error: Json not valid")
-            print(e)
+            for error in e.errors():
+                print(f"Field {error['loc']}: {error['msg']}")
+
             sys.exit()
         except OSError as e:
             print("File", f'"{path}"')
