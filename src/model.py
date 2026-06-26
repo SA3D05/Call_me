@@ -1,4 +1,4 @@
-from llm_sdk import Small_LLM_Model
+from llm_sdk.llm_sdk import Small_LLM_Model
 
 
 class Model:
@@ -64,10 +64,11 @@ class Model:
         self.__set_func_params(target_func)
 
         prompt = (
-            "You are a data extraction tool."
+            "You are a data extraction tool. "
             "Do NOT solve math problems. Do NOT answer questions. "
-            "Only extract the raw numbers or words from the query "
-            "that match the function parameters.\n\n"
+            "Only extract the raw numbers "
+            "or words from the query that match "
+            "the function parameters.\n\n"
             f"Extract the arguments for the function '{target_func}' "
             "based ONLY on the user query.\n"
             "Format the output strictly as 'argument_name: value'. "

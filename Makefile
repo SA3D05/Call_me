@@ -7,7 +7,7 @@ FUNC_DEF = data/input/functions_definition.json
 INPUT = data/input/function_calling_tests.json
 OUTPUT = data/output/function_calls.json
 
-ARGS = --functions_definition $(FUNC_DEF)  --input   $(INPUT) --output  $(OUTPUT)
+ARGS = --functions_definition $(FUNC_DEF) --input $(INPUT) --output $(OUTPUT)
 
 run:
 	uv run python -m src $(ARGS)
@@ -24,5 +24,5 @@ clean:
 
 
 lint:
-	mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
-	flake8 --extend-exclude=.venv .
+	mypy -m src --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	flake8 src

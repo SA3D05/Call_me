@@ -49,6 +49,7 @@ class GlobalInfo:
         self.input_json: list[dict] = []
 
     def get_paths(self, args: list[str]) -> None:
+        path: str = ""
         try:
             for flag in ["--functions_definition", "--input", "--output"]:
                 attr = flag.lstrip("-") + "_path"
@@ -60,6 +61,9 @@ class GlobalInfo:
 
                 try:
                     value = args[flag_idx + 1]
+                    path = value
+                    f = open(value)
+                    f.close()
                 except IndexError:
                     raise ValueError(f"missing value for flag '{flag}'")
 
@@ -69,6 +73,11 @@ class GlobalInfo:
                 setattr(self, attr, value)
         except ValueError as e:
             print("Error:", e)
+            sys.exit()
+
+        except OSError as e:
+            print("File", f'"{path}"')
+            print(f"Error: {e.strerror}")
             sys.exit()
 
     def get_json(self) -> None:
