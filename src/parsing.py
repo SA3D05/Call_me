@@ -6,6 +6,8 @@ import pydantic
 
 
 class ObjType(BaseModel):
+    """Schema for a function parameter type or return type."""
+
     model_config = {"extra": "forbid"}
     type: Literal["number", "string", "boolean", "integer"]
 
@@ -17,6 +19,8 @@ non_empty = Annotated[
 
 
 class FunctionDef(BaseModel):
+    """Schema describing a function definition."""
+
     model_config = {"extra": "forbid"}
     name: non_empty
     description: non_empty
@@ -25,6 +29,8 @@ class FunctionDef(BaseModel):
 
 
 class InputPrompt(BaseModel):
+    """Schema for a user input prompt."""
+
     model_config = {"extra": "forbid"}
     prompt: non_empty
 
@@ -40,8 +46,11 @@ list_input_prompt = Annotated[
 
 
 class GlobalInfo:
+    """Parse arguments and load the input JSON files."""
 
     def __init__(self) -> None:
+        """Initialize empty path and JSON storage."""
+
         self.functions_definition_path: str = ""
         self.input_path: str = ""
         self.output_path: str = ""
@@ -49,6 +58,12 @@ class GlobalInfo:
         self.input_json: list[dict] = []
 
     def get_paths(self, args: list[str]) -> None:
+        """Extract and validate JSON file paths from arguments.
+
+        Args:
+            args: arguments excluding the program name.
+        """
+
         path: str = ""
         try:
             for flag in ["--functions_definition", "--input", "--output"]:
@@ -81,6 +96,8 @@ class GlobalInfo:
             sys.exit()
 
     def get_json(self) -> None:
+        """Load and validate the JSON content from the configured files."""
+
         path = ""
         try:
             for attr in ["functions_definition", "input"]:

@@ -3,6 +3,12 @@ from llm_sdk.llm_sdk import Small_LLM_Model
 
 class Model:
     def __init__(self, prompts: list, functions: list):
+        """Initialize the model wrapper.
+
+        Args:
+            prompts: Input prompts to process.
+            functions: Function definitions available to the model.
+        """
         self.model = Small_LLM_Model()
         self.prompts = prompts
         self.functions = functions
@@ -12,16 +18,16 @@ class Model:
         self.input_ids: list[int] = []
         self.indent_level = 4
         self.param_idx = 0
-        self.params_names: list = []
-
-    def __set_func_params(self, target_func: str) -> None:
-
-        for func in self.functions:
-            if func["name"] == target_func:
-                for param in func["parameters"].keys():
-                    self.params_names.append(param)
 
     def get_func_info(self, target_func: str = "") -> str:
+        """Build a textual description of one or more functions.
+
+        Args:
+            target_func: Optional function name to filter by.
+
+        Returns:
+            A formatted string describing the selected functions.
+        """
         result = ""
         for func in self.functions:
             if target_func != "" and func["name"] != target_func:
@@ -36,6 +42,11 @@ class Model:
         return result
 
     def set_func_input_ids(self, current_prompt: str) -> None:
+        """Encode the prompt used to select a function.
+
+        Args:
+            current_prompt: The current user prompt.
+        """
 
         functions_info = self.get_func_info()
 
@@ -59,9 +70,14 @@ class Model:
         target_func: str,
         current_prompt: str,
     ) -> None:
+        """Encode the prompt used to extract arguments.
+
+        Args:
+            target_func: Function name whose parameters are being extracted.
+            current_prompt: The current user prompt.
+        """
 
         function_info = self.get_func_info(target_func)
-        self.__set_func_params(target_func)
 
         prompt = (
             "You are a data extraction tool. "
@@ -93,6 +109,12 @@ class Model:
         is_first: bool,
         next_param_name: str,
     ) -> None:
+        """Append the next parameter name to the argument extraction prompt.
+
+        Args:
+            is_first: Whether this is the first parameter being written.
+            next_param_name: Name of the next parameter to extract.
+        """
 
         prompt = ""
 
@@ -105,10 +127,23 @@ class Model:
         self.input_ids.extend(ids)
 
     def generate_logits(self) -> list[float]:
+        """Generate logits for the current encoded input.
+
+        Returns:
+            The model logits for the current input sequence.
+        """
         logits = self.model.get_logits_from_input_ids(self.input_ids)
 
         return logits
 
     def set_token_id(self, token_id: int) -> str:
+        """Append a generated token id and decode it.
+
+        Args:
+            token_id: Token id selected by the decoding logic.
+
+        Returns:
+            The decoded token text.
+        """
         self.input_ids.append(token_id)
         return self.model.decode([token_id])
