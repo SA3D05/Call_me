@@ -38,7 +38,7 @@ class Controller:
             self.writer.result += current_func
             self.__generate_arguments(current_func, prompt)
 
-        self.writer.__write_json_end()
+        self.writer.write_json_end()
         try:
             with open(self.output_file, "w") as f:
                 f.write(self.writer.result)

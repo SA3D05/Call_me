@@ -145,7 +145,7 @@ class Writer:
         text: str = self.__indent(2) + '"parameters":{'
         self.__write(text)
 
-    def __write_json_end(self) -> None:
+    def write_json_end(self) -> None:
         """Write the closing JSON for the full output."""
 
         text: str = ""
